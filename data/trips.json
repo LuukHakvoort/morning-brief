@@ -1,0 +1,28 @@
+{
+  "_how_to_edit": "Used when trips.enabled is true. Dates are YYYY-MM-DD and inclusive (start = travel there, end = travel back). Sessions show on the day they happen; prep_schedule tasks show N days before or after every trip. Placeholders in tasks: {city} {name} {titles} {titles_first_half} {titles_second_half} {free_slots} {arrive}. 'away' is for time away without an agenda.",
+  "trips": [
+    {
+      "name": "Conference in Berlin",
+      "city": "Berlin",
+      "start": "2027-03-08",
+      "end": "2027-03-10",
+      "arrive": "flight lands 11:40, train to the hotel",
+      "depart": "flight 18:15",
+      "contact": "organiser desk in the main hall",
+      "sessions": [
+        {"date": "2027-03-09", "when": "10:00", "title": "Keynote: the energy transition", "place": "Hall A"},
+        {"date": "2027-03-09", "when": "14:00", "title": "Workshop: open data", "place": "Room 2.14"}
+      ],
+      "free_slots": ["Tuesday after 16:00"]
+    }
+  ],
+  "away": [
+    {"place": "family visit", "start": "2027-04-02", "end": "2027-04-05"}
+  ],
+  "prep_schedule": [
+    {"days_before": 7, "task": "{city} prep: book travel and accommodation, and check your ID is valid."},
+    {"days_before": 3, "task": "{city} prep: read up on {titles} and write one question for each."},
+    {"days_before": 1, "task": "{city} tomorrow: pack chargers and ID; {arrive}."},
+    {"days_after": 1, "task": "{city} follow-up: a short thank-you to everyone you met, each mentioning one thing they said."}
+  ]
+}

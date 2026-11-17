@@ -1,0 +1,9 @@
+{
+  "_how_to_edit": "Optional. 'days' = a one-line focus for a date (shown as 'Today's focus', with tomorrow's as a preview). 'schedule_changes' = anything dated that the calendar doesn't know: a moved deadline, a day off, an interview. Dates are YYYY-MM-DD; 'note' is optional. Past entries can stay or be deleted.",
+  "days": [
+    {"date": "2026-11-16", "output": "Finish the first draft of the project report", "note": "the data section first"}
+  ],
+  "schedule_changes": [
+    {"date": "2026-11-18", "text": "Dentist moved to 16:00"}
+  ]
+}

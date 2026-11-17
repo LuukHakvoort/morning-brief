@@ -1,0 +1,5 @@
+{
+  "_how_it_works": "Written by the routine and by facts.py --save. 'items' = roles found by web search (fields as in data/jobs.csv). 'served' = roles already suggested, so none is suggested twice. Old entries are pruned automatically.",
+  "items": [],
+  "served": []
+}

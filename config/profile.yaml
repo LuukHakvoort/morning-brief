@@ -1,0 +1,163 @@
+# Morning brief profile: the facts about you that the brief is built from.
+#
+# This is a working example for "Alex". Replace the values with your own,
+# then run `python3 scripts/doctor.py` to check the file. The format is
+# plain YAML (indent with spaces; quote values that contain ": " or start
+# with a special character). Dates are "YYYY-MM-DD", times "HH:MM".
+#
+# How the brief should *sound* and which sections it has lives in
+# config/brief_composition.md. Optional modules (countdowns, trips, workout,
+# jobs) are switched on with `enabled: true`.
+
+user:
+  name: "Alex"
+  timezone: "Europe/Lisbon"      # an IANA zone: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+  home_city: "Lisbon"            # used to tell home days from trip days
+
+tone:
+  style: "warm, energetic coach: momentum over pressure"
+  voice_notes:
+    - "Open with one energetic line naming today's single biggest lever, not a greeting."
+    - "Frame deadlines as fuel: 'N days = N chances', never 'hurry, only N days left'."
+    - "Use the reader's first name once."
+    - "Close with one concrete first move for the next 30 minutes."
+  banned_phrases:
+    - "just a reminder"
+    - "don't forget"
+    - "unfortunately"
+  example_opening: "Let's go, Alex! 12 days to the half marathon: 12 chances to bank an easy run."
+
+delivery:
+  time_local: "07:30"            # when the Claude routine runs (set the routine's cron to match, in UTC)
+  weekly_extras_day: "Monday"    # the day the brief adds a week-ahead view and weekly research
+  title: "Morning Brief"         # first line of every brief: "# Morning Brief — Monday, November 16, 2026"
+  backup_after: "08:30"          # no brief by then? GitHub Actions sends the free backup edition
+  backup_until: "18:00"          # ...but not after this time
+
+# --- Delivery channels (sent by GitHub Actions right after the routine pushes) ---
+telegram:
+  enabled: false                 # needs the TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID secrets
+
+email:
+  enabled: false                 # needs the SMTP_PASSWORD secret (for Gmail: an app password)
+  to: "you@example.com"
+  subject_prefix: "Morning Brief"
+  smtp_host: "smtp.gmail.com"    # Fastmail: smtp.fastmail.com, Outlook: smtp-mail.outlook.com (port 587)
+  smtp_port: 465                 # 465 = SSL, 587 = STARTTLS
+  # smtp_username defaults to `to`; set the SMTP_USERNAME secret if it differs.
+
+artifact:
+  enabled: false                 # a persistent web page (Claude artifact) updated in place every morning
+  title_prefix: "Morning Brief"
+
+# --- Calendar ------------------------------------------------------------------
+# Your calendar's private ICS link goes in the CALENDAR_ICS_URL repository
+# secret (never in this file). A workflow turns it into data/calendar_window.json.
+calendar:
+  enabled: false
+  window_file: "data/calendar_window.json"
+  window_days: 14                # how far ahead the snapshot reaches
+  stale_after_days: 2            # warn in the brief if the snapshot is older than this
+  hide_patterns: []              # titles containing any of these are left out, e.g. ["focus time", "lunch"]
+  home_only_patterns: []         # titles that only make sense at home (hidden while you're away)
+
+# Recurring things the brief should know about. `day` is a weekday name,
+# optionally with "evening"; `away_ok: true` keeps it on trip days.
+weekly_fixed_items:
+  - name: "Groceries"
+    day: "Saturday"
+    time: "morning"
+  - name: "Football with friends"
+    day: "Wednesday"
+    time: "19:00-20:30"
+  - name: "Online Spanish class"
+    day: "Thursday"
+    time: "18:00-19:00"
+    away_ok: true
+
+# Optional hand-written focus per date and dated schedule changes.
+day_plan:
+  file: "data/day_plan.json"
+
+# One item per day from each list, cycling. "text | link" adds a link.
+rotations:
+  - name: "Spanish practice"
+    minutes: 20
+    items:
+      - "One Duolingo unit, then say five new sentences out loud"
+      - "Read one short news article in Spanish and note 10 new words"
+      - "Listen to one podcast episode at your level and summarise it in 5 lines"
+      - "Flashcard review: 15 minutes of old words, 5 new ones"
+  - name: "Reading"
+    minutes: 15
+    items:
+      - "15 pages of your current book, phone in another room"
+      - "One long-read you saved this week"
+
+news:
+  section_heading: "World pulse"
+  topics:                        # what the routine searches for (the backup edition uses the feeds below)
+    - "major world news"
+    - "climate and energy"
+    - "technology"
+  max_age_days: 7
+  dedupe_window_days: 7
+  headline_count: 5
+  report_count: 3
+  backup_feeds:                  # "Label | RSS or Atom URL", fetched by the free backup edition
+    headlines:
+      - "BBC World | https://feeds.bbci.co.uk/news/world/rss.xml"
+      - "Guardian World | https://www.theguardian.com/world/rss"
+      - "UN News | https://news.un.org/feed/subscribe/en/news/all/rss.xml"
+    reports:
+      - "Guardian Environment | https://www.theguardian.com/environment/rss"
+      - "Carbon Brief | https://www.carbonbrief.org/feed/"
+      - "Guardian Technology | https://www.theguardian.com/technology/rss"
+
+# --- Optional modules ----------------------------------------------------------
+countdowns:
+  enabled: true
+  include_trips: true
+  items:
+    - label: "the half marathon"
+      date: "2027-09-26"
+      reminders:
+        - "14 | Book the hotel near the start line"
+        - "1 | Lay out the kit and get an early night"
+
+workout:
+  enabled: true
+  minutes: 15
+  rotation:
+    - "Core circuit: plank, dead bug, side plank, bird-dog (3 rounds)"
+    - "Mobility flow for hips and back"
+    - "Bodyweight strength: squats, push-ups, lunges, glute bridges (3 rounds)"
+    - "Yoga flow, gentle pace"
+  runs:
+    enabled: false
+    per_week: 2
+    min_days_between: 2
+    evening_starts: "17:00"
+    easy: "30 minutes easy, at a pace where you can talk in full sentences"
+    long: "45-60 minutes steady and easy, the first 10 minutes extra slow"
+    warm_up: "5-minute dynamic warm-up"
+    cool_down: "10-minute stretch"
+    block_all_day_keywords: ["trip", "flight", "wedding"]
+
+trips:
+  enabled: false
+  file: "data/trips.json"
+
+jobs:
+  enabled: false
+  csv_file: "data/jobs.csv"
+  pipeline_file: "state/job_pipeline.json"
+  daily_picks: 3
+  refill_below: 6
+  exclude_unpaid: true
+  profile_summary: >
+    Recent graduate in environmental science, fluent in English and
+    Portuguese, looking for junior analyst roles in climate and energy.
+  search:
+    roles: ["junior climate analyst", "energy research assistant"]
+    locations: ["Lisbon", "remote (EU)"]

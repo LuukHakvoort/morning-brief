@@ -1,0 +1,81 @@
+name: Deliver the brief
+
+# Sends each morning's brief by Telegram and email (scripts/deliver.py), and
+# builds a free no-AI backup edition when the Claude routine produced nothing.
+#
+#   push      The routine pushes briefs/<date>.md; this starts within seconds
+#             and sends it. This is the normal path.
+#   schedule  The safety net. Hourly; scripts/deliver.py only acts between
+#             delivery.backup_after and delivery.backup_until (your local
+#             time) and only if today's brief hasn't gone out yet. GitHub
+#             delays or drops scheduled runs at busy times, which is why the
+#             push trigger does the real work.
+#
+# Each run takes well under a minute. To use fewer Actions minutes, narrow the
+# cron to your backup window: `python3 scripts/doctor.py` prints a suggestion.
+on:
+  push:
+    branches: [main]
+    paths: ["briefs/*.md"]
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Re-send today's brief on every enabled channel, even if it already went out"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # commit the backup brief and delivery state back to main
+
+concurrency:
+  group: deliver
+  cancel-in-progress: false
+
+jobs:
+  deliver:
+    # Off until you set the repository variable MORNING_BRIEF_ENABLED=true
+    # (Settings > Secrets and variables > Actions > Variables), so the public
+    # template itself never runs.
+    if: vars.MORNING_BRIEF_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      EVENT: ${{ github.event_name }}
+      FORCE: ${{ inputs.force }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+      SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Refuse to run in a public repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(gh api "repos/$GITHUB_REPOSITORY" --jq .private)" != "true" ]; then
+            echo "::error::This repository is public. It commits your briefs and personal data every day, so make it private first (Settings > General > Danger Zone)."
+            exit 1
+          fi
+
+      - name: Deliver
+        run: python3 scripts/deliver.py
+
+      # Commit even if delivery failed: a backup brief and the delivery state
+      # must not be lost. Pushes made with GITHUB_TOKEN don't re-trigger
+      # workflows, so this can't loop.
+      - name: Commit brief + state
+        if: always()
+        run: |
+          git config user.name "morning-brief-bot"
+          git config user.email "morning-brief-bot@users.noreply.github.com"
+          git add briefs state
+          git diff --cached --quiet || git commit -m "Morning brief $(python3 scripts/config.py today) (delivery)"
+          for i in 1 2 3; do
+            git push && exit 0
+            git pull --rebase
+          done
+          echo "::error::push failed after 3 attempts"
+          exit 1

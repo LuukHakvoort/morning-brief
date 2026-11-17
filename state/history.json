@@ -1,0 +1,10 @@
+{
+  "_about": "State written by scripts. facts.py --save owns last_brief_date, rotations and running; the routine owns artifact; scripts/deliver.py (GitHub Actions) owns the *_last_sent_date keys.",
+  "last_brief_date": null,
+  "rotations": {},
+  "running": {},
+  "artifact": {"url": null, "last_published_date": null},
+  "telegram_last_sent_date": null,
+  "email_last_sent_date": null,
+  "alert_last_sent_date": null
+}

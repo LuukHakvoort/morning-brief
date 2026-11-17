@@ -1,0 +1,59 @@
+name: Refresh the calendar
+
+# Claude's cloud sandbox can't reach calendar hosts (iCloud, Google...), so
+# this job fetches your calendar from the CALENDAR_ICS_URL secret and commits
+# the next couple of weeks as data/calendar_window.json for the routine to
+# read. Only the expanded events in that window are stored, never the feed.
+#
+# Every 3 hours, so a fresh snapshot is always there before the routine runs;
+# a run with no changes commits nothing.
+on:
+  schedule:
+    - cron: "41 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write   # commit data/calendar_window.json back to main
+
+concurrency:
+  group: calendar-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    if: vars.MORNING_BRIEF_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Refuse to run in a public repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$(gh api "repos/$GITHUB_REPOSITORY" --jq .private)" != "true" ]; then
+            echo "::error::This repository is public. Make it private before syncing your calendar into it."
+            exit 1
+          fi
+
+      - name: Fetch and expand the calendar
+        env:
+          CALENDAR_ICS_URL: ${{ secrets.CALENDAR_ICS_URL }}
+        run: python3 scripts/calendar_refresh.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "morning-brief-bot"
+          git config user.email "morning-brief-bot@users.noreply.github.com"
+          git add data/calendar_window.json
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+            exit 0
+          fi
+          git commit -m "Refresh calendar ($(python3 scripts/config.py today))"
+          for i in 1 2 3; do
+            git push && exit 0
+            git pull --rebase
+          done
+          echo "::error::push failed after 3 attempts"
+          exit 1

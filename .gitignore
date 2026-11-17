@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.DS_Store
+.venv/
+venv/
+.env
+.env.*
+*.tmp
+.claude/*.lock
+.claude/settings.local.json
+# Personal documents don't belong in this repo (remove a line if you really need one).
+*.pdf
+*.xlsx
+*.docx

@@ -13,11 +13,14 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # 24.04 still offers Python 3.9, the oldest version supported here (it's
+    # what macOS ships as /usr/bin/python3); newer runner images start at 3.10.
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
+      fail-fast: false
       matrix:
-        python: ["3.9", "3.12"]
+        python: ["3.9", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
